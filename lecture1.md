@@ -2,7 +2,7 @@
 title: "Lecture 1: Comparing Xi and Hu's Party Congress Speeches"
 author: "King-wa Fu"
 date: "January 10, 2018"
-output: html_document
+output: md_document
 ---
 Chinese leader's speech in significant political event is a key for public and media to understand the country's strategy and future development. This short paper aims to analyze and compare two Chinese Communist Party leaders' speeches made at the Party Congress: Xi Jinping's speech at the 19th Party Congress (2017) and Hu jintao's the 17th party congress (2007).   
 

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="King-wa Fu" />
+
+<meta name="date" content="2018-01-18" />
+
+<title>JMSC 6116 Lecture 1: A Deep Dive into Xi and Tsai’s Taiwan Speech</title>
+
+<script src="lecture1_2019_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="lecture1_2019_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="lecture1_2019_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="lecture1_2019_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="lecture1_2019_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="lecture1_2019_files/navigation-1.1/tabsets.js"></script>
+<link href="lecture1_2019_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="lecture1_2019_files/highlightjs-9.12.0/highlight.js"></script>
+<script src="lecture1_2019_files/htmlwidgets-0.9/htmlwidgets.js"></script>
+<script src="lecture1_2019_files/plotly-binding-4.7.1/plotly.js"></script>
+<script src="lecture1_2019_files/typedarray-0.1/typedarray.min.js"></script>
+<link href="lecture1_2019_files/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="lecture1_2019_files/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+<link href="lecture1_2019_files/plotlyjs-1.29.2/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="lecture1_2019_files/plotlyjs-1.29.2/plotly-latest.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">JMSC 6116 Lecture 1: A Deep Dive into Xi and Tsai’s Taiwan Speech</h1>
+<h4 class="author"><em>King-wa Fu</em></h4>
+<h4 class="date"><em>January 18, 2018</em></h4>
+
+</div>
+
+
+<p><img src="http://ichef.bbci.co.uk/news/660/cpsprodpb/A373/production/_105034814_composite.jpg" width="50%" /></p>
+<p>This short paper aims to analyze and compare the English-version speeches made by Xi Jinping “Message to Compatriots in Taiwan” and Tsai Ing-wen’s response statement.</p>
+<p>First at all, we install the required libraries and load them into the system.</p>
+<pre class="r"><code>if (!require(&quot;wordcloud&quot;)) install.packages(&quot;wordcloud&quot;, repos=&quot;https://cran.cnr.berkeley.edu/&quot;)
+if (!require(&quot;tm&quot;)) install.packages(&quot;tm&quot;, repos=&quot;https://cran.cnr.berkeley.edu/&quot;)
+
+library(&quot;wordcloud&quot;)
+library(&quot;wordcloud2&quot;)
+library(&quot;tm&quot;)
+library(plotly)</code></pre>
+<p>Then, let’s obtain the copy of Xi Jinping’s speech.The file is already prepared on GitHub in plain text format. The first five lines of his speech are displayed.</p>
+<pre class="r"><code>con &lt;- url(&quot;https://raw.githubusercontent.com/jmsc-bc4j/JMSC6116_public/master/xi_taiwan.txt&quot;) # Establish a connection via url
+xi &lt;- readLines(con)  # Read line by line from the connection to a string array xi
+close(con) # Remember to close the connection after use
+xi[1:5] # List the first five lines of Xi&#39;s speech</code></pre>
+<pre><code>## [1] &quot;Highlights of Xi&#39;s speech at Taiwan message anniversary event&quot;                                                                                                     
+## [2] &quot;&quot;                                                                                                                                                                  
+## [3] &quot;President Xi Jinping delivered a speech at a gathering held Wednesday in Beijing to commemorate the 40th anniversary of issuing Message to Compatriots in Taiwan. &quot;
+## [4] &quot;&quot;                                                                                                                                                                  
+## [5] &quot;Here are highlights of President Xi&#39;s speech:&quot;</code></pre>
+<p>Next, we get the copy of Tsai’s speech.</p>
+<pre class="r"><code>con &lt;- url(&quot;https://raw.githubusercontent.com/jmsc-bc4j/JMSC6116_public/master/tsai_taiwan.txt&quot;)
+tsai &lt;- readLines(con)
+close(con)</code></pre>
+<p>Then, we define a R function, namely Preprocessing, to convert all characters into lower case (consistently for counting purpose), remove the punctuations and “stopwords”, and “clean” the text data into a format for next step. The first portion of the “cleaned” version of Xi’s speech are displayed.</p>
+<pre class="r"><code>Preprocessing &lt;- function(doc){
+  #create corpus
+  doc.corpus &lt;- Corpus(VectorSource(doc))
+  #clean up
+  doc.corpus &lt;- tm_map(doc.corpus, function(x)chartr(&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;,&quot;abcdefghijklmnopqrstuvwxyz&quot;,x))### Convert to lower case
+  doc.corpus &lt;- tm_map(doc.corpus, removePunctuation)   ### remove punctuation
+  doc.corpus &lt;- tm_map(doc.corpus, function(x)removeWords(x,stopwords(&quot;english&quot;)))  #### remove stopwords
+  return(doc.corpus)
+}
+
+xi &lt;- paste(xi,collapse=&quot; &quot;) # Collapse into one single line
+tsai &lt;- paste(tsai,collapse=&quot; &quot;)
+xi.p &lt;- Preprocessing(xi) # Send the array xi to the function for data cleaning
+tsai.p &lt;- Preprocessing(tsai) # Output the results to xi.p and tsai.p (class &quot;Corpus&quot;)
+substr(xi.p$content,1,200) # Inspect the first 200 words of Xi&#39;s &quot;cleaned&quot; speech</code></pre>
+<pre><code>## [1] &quot;highlights  xis speech  taiwan message anniversary event  president xi jinping delivered  speech   gathering held wednesday  beijing  commemorate  40th anniversary  issuing message  compatriots  taiwa&quot;</code></pre>
+<p>Ok. So we now compare Xi and Tsai’s speeches by using histogram plot. To do this, a term document matrix, which stores the words used (by rows) and the two leaders (by columns), is created.</p>
+<pre class="r"><code>tdm &lt;- TermDocumentMatrix(Corpus(VectorSource(c(xi.p$content,tsai.p$content)))) # Create a term document matrix
+tdm &lt;- as.matrix(tdm) # convert it into a standard matrix
+colnames(tdm) &lt;- c(&quot;Xi&#39;s speech&quot;,&quot;Tsai&#39;s speech&quot;) # Assign the names to the columns</code></pre>
+<p>Here you go. The top-5 high frequency term plot is presented.</p>
+<pre class="r"><code>Num_of_terms_shown &lt;- 5
+xi_freqterm &lt;- tdm[,&quot;Xi&#39;s speech&quot;]
+xi_barplot &lt;- data.frame(name=names(xi_freqterm),y=xi_freqterm)
+xi_barplot &lt;- xi_barplot[order(xi_barplot$y,decreasing=TRUE),]
+xi_barplot$name &lt;- factor(xi_barplot$name, levels = xi_barplot$name)
+xi_barplot &lt;- xi_barplot[1:Num_of_terms_shown,]
+
+tsai_freqterm &lt;- tdm[,&quot;Tsai&#39;s speech&quot;]
+tsai_barplot &lt;- data.frame(name=names(tsai_freqterm),y=tsai_freqterm)
+tsai_barplot &lt;- tsai_barplot[order(tsai_barplot$y,decreasing=TRUE),]
+tsai_barplot$name &lt;- factor(tsai_barplot$name, levels = tsai_barplot$name)
+tsai_barplot &lt;- tsai_barplot[1:Num_of_terms_shown,]
+
+p1 &lt;- plot_ly(xi_barplot, x = ~name, y = ~y, type = &#39;bar&#39;, 
+             text = ~y, textposition = &#39;auto&#39;, name = &quot;Xi Jingping&#39;s Speech&quot;,
+             marker = list(color = &#39;red&#39;,
+                           line = list(color = &#39;red&#39;, width = 1.5)))
+p1 &lt;- layout(p1, title = &quot;&quot;, xaxis = list(title = &quot;&quot;), yaxis = list(title = &quot;&quot;))
+
+p2 &lt;- plot_ly(tsai_barplot, x = ~name, y = ~y, type = &#39;bar&#39;, 
+              text = ~y, textposition = &#39;auto&#39;, name = &quot;Tsai Ing-wen&#39;s Speech&quot;,
+              marker = list(color = &#39;green&#39;,
+                            line = list(color = &#39;green&#39;, width = 1.5)))
+p2 &lt;- layout(p2, title = &quot;Top 5 Terms Used in Xi Jingping/Tsai Ing-wen&#39;s Speech&quot; , xaxis = list(title = &quot;&quot;), yaxis = list(title = &quot;&quot;))
+
+p &lt;- subplot(p1,p2,shareY=T)
+p &lt;- layout(p, showlegend = T)
+p</code></pre>
+<div id="2e901e853de" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="2e901e853de">{"x":{"data":[{"x":["taiwan","said","reunification","chinese","crossstraits"],"y":[31,24,20,15,15],"text":[31,24,20,15,15],"textposition":["auto","auto","auto","auto","auto"],"name":"Xi Jingping's Speech","marker":{"fillcolor":"rgba(31,119,180,1)","color":"red","line":{"color":"red","width":1.5}},"type":"bar","xaxis":"x","yaxis":"y","frame":null},{"x":["taiwan","china","crossstrait","must","people"],"y":[21,8,8,7,7],"text":[21,8,8,7,7],"textposition":["auto","auto","auto","auto","auto"],"name":"Tsai Ing-wen's Speech","marker":{"fillcolor":"rgba(31,119,180,1)","color":"green","line":{"color":"green","width":1.5}},"type":"bar","xaxis":"x2","yaxis":"y","frame":null}],"layout":{"xaxis":{"domain":[0,0.48],"type":"category","categoryorder":"array","categoryarray":["taiwan","said","reunification","chinese","crossstraits","peaceful","development","straits","compatriots","national","will","across","relations","people","china","interests","mainland","question","sides","years","force","added","chinas","common","future","independence","one","peace","political","president","rejuvenation","two","affairs","anyone","best","can","consultation","country","efforts","end","jinping","make","nation","never","pursue","shared","speech","systems","1992","activities","anniversary","approach","arrangement","basic","basis","called","cause","complete","conduct","consensus","contributions","countries","definitely","democratic","economic","energy","exchanges","family","forward","foundation","fully","great","greater","hand","highlights","historic","historical","history","institutional","interference","joint","legitimate","message","much","must","new","onechina","parties","peoples","principle","principles","progress","promise","reached","resolving","separatists","task","tide","treasure","trend","upholding","use","well","world","xis","young","1949","40th","abandon","abroad","according","achieved","adding","addressed","advance","advancing","allows","also","altered","always","asiapacific","based","battles","beijing","beliefs","belong","benefiting","better","bond","breakthroughs","bring","broad","building","calls","changed","cherish","commemorate","communist","community","concerns","conclusion","connectivity","consolidate","continued","cooperation","cordially","core","correct","countrys","courage","cpc","create","crossstrait","culture","dead","decades","decided","deepen","delivered","discussion","disorder","domestic","dont","drawn","dreams","ended","enhance","ensuring","era","establish","established","estrangement","event","exchange","expounds","extensive","external","eyes","fact","facts","fight","flow","forces","forge","form","free","friendly","fulfill","furthermore","gathering","goes","good","government","groups","guaranteed","happiness","harm","heights","held","help","home","hope","human","humanity","identity","important","including","indepth","industrial","infrastructure","inherit","inject","institutionalize","integrated","irresistible","issuing","jointly","kinship","laid","lasting","lead","leave","legal","lies","life","line","linked","long","made","maintained","maintaining","major","makes","market","may","means","members","motherland","nations","natural","naturally","necessary","noting","number","obstacles","openingup","opportunities","opposing","option","originated","outside","part","party","pledged","pledges","policy","positive","private","problems","process","promoting","property","proposed","proposes","prosperity","protected","push","pushed","realize","realized","realizing","recommend","reform","region","religious","renounce","representatives","reserve","resources","respected","reunified","rights","road","room","sectors","security","seek","separatist","series","seven","share","shoulder","since","sincerely","sincerity","situations","small","social","solved","sovereignty","space","stability","stable","standards","stopped","strait","stressing","strive","supported","system","taken","taking","target","tasks","time","together","toward","trade","traditional","understood","united","unwaveringly","upheld","urged","utmost","victories","way","weakness","wednesday","welcome","wellbeing","willing","work","9in1","abandoned","abandoning","absolutely","accept","accepted","act","actively","afternoon","agencies","aircraft","allies","attract","auditorium","authorities","authorized","become","beneficial","benefitting","bravely","built","buying","call","capital","change","changes","choices","circling","citizens","clearly","commemorating","commitment","commitments","comprised","concessions","conducted","confirmed","consolidating","consultations","contributing","corporations","crucial","definition","demeanor","democracy","deny","designation","determine","develop","differences","diplomatic","direction","divisions","domestically","duty","elections","emphasize","engage","epidemic","equality","existence","explain","explained","exploration","face","facing","faithfully","favors","fellow","fever","financial","first","focus","follows","forms","foster","foundations","four","fourth","freedom","friends","front","fulfilled","full","fundamental","get","governmentauthorized","governments","governmenttogovernment","grassroots","group","handle","handling","healthy","however","ideas","individual","inducements","information","ingwen","instead","institutionalized","interfere","international","intimidation","issues","january","lastly","leader","livelihoods","majority","making","many","mean","measures","mechanism","media","member","military","million","misgivings","monitored","monitoring","morning","move","musts","mutual","mutually","naval","need","negotiations","network","next","now","offer","office","opinion","oppose","opposition","orderly","partner","past","path","peacefully","position","pragmatically","presidential","presidents","pressuring","promote","proposing","provoke","public","reality","reason","regarding","regional","reiterate","remarks","remind","represent","republic","requires","resolutely","respect","responsibility","results","right","scenario","second","see","set","socalled","society","spiritual","statement","strategies","strengthen","strengthening","submit","suffered","superpower","suppression","swine","taiwancentric","taiwanese","taiwanfirst","taiwans","take","talent","talk","technology","thank","third","threepart","today","towards","translation","truly","trustworthy","tsai","understand","understanding","union","uphold","upon","urgent","using","values","vast","vessels","vigorously","want","watching","welfare","whether","wont","yesterday","<U+7FD2><U+8FD1><U+5E73>"],"anchor":"y"},"xaxis2":{"domain":[0.52,1],"type":"category","categoryorder":"array","categoryarray":["taiwan","china","crossstrait","must","people","president","two","want","country","democratic","one","position","taiwanese","chinas","relations","security","systems","will","consultations","democracy","negotiations","also","basis","beijing","compatriots","consensus","delivered","development","economic","message","peoples","political","sides","speech","governments","regarding","reiterate","socalled","1992","40th","anniversary","can","conduct","exchanges","jinping","make","never","strait","way","willing","years","absolutely","afternoon","authorities","authorized","commemorating","commitments","engage","fundamental","inducements","international","issues","mean","monitored","move","mutual","oppose","promote","regional","republic","respect","spiritual","superpower","suppression","taiwans","tsai","union","using","values","basic","bring","called","cherish","community","consolidate","core","established","good","identity","including","life","made","mainland","means","national","new","peace","positive","principle","principles","prosperity","said","sovereignty","stability","system","together","trade","united","xis","9in1","abandoned","abandoning","accept","accepted","act","actively","agencies","aircraft","allies","attract","auditorium","become","beneficial","benefitting","bravely","built","buying","call","capital","change","changes","choices","circling","citizens","clearly","commitment","comprised","concessions","conducted","confirmed","consolidating","contributing","corporations","crucial","definition","demeanor","deny","designation","determine","develop","differences","diplomatic","direction","divisions","domestically","duty","elections","emphasize","epidemic","equality","existence","explain","explained","exploration","face","facing","faithfully","favors","fellow","fever","financial","first","focus","follows","forms","foster","foundations","four","fourth","freedom","friends","front","fulfilled","full","get","governmentauthorized","governmenttogovernment","grassroots","group","handle","handling","healthy","however","ideas","individual","information","ingwen","instead","institutionalized","interfere","intimidation","january","lastly","leader","livelihoods","majority","making","many","measures","mechanism","media","member","military","million","misgivings","monitoring","morning","musts","mutually","naval","need","network","next","now","offer","office","opinion","opposition","orderly","partner","past","path","peacefully","pragmatically","presidential","presidents","pressuring","proposing","provoke","public","reality","reason","remarks","remind","represent","requires","resolutely","responsibility","results","right","scenario","second","see","set","society","statement","strategies","strengthen","strengthening","submit","suffered","swine","taiwancentric","taiwanfirst","take","talent","talk","technology","thank","third","threepart","today","towards","translation","truly","trustworthy","understand","understanding","uphold","upon","urgent","vast","vessels","vigorously","watching","welfare","whether","wont","yesterday","<U+7FD2><U+8FD1><U+5E73>","1949","abandon","abroad","according","achieved","across","activities","added","adding","addressed","advance","advancing","affairs","allows","altered","always","anyone","approach","arrangement","asiapacific","based","battles","beliefs","belong","benefiting","best","better","bond","breakthroughs","broad","building","calls","cause","changed","chinese","commemorate","common","communist","complete","concerns","conclusion","connectivity","consultation","continued","contributions","cooperation","cordially","correct","countries","countrys","courage","cpc","create","crossstraits","culture","dead","decades","decided","deepen","definitely","discussion","disorder","domestic","dont","drawn","dreams","efforts","end","ended","energy","enhance","ensuring","era","establish","estrangement","event","exchange","expounds","extensive","external","eyes","fact","facts","family","fight","flow","force","forces","forge","form","forward","foundation","free","friendly","fulfill","fully","furthermore","future","gathering","goes","government","great","greater","groups","guaranteed","hand","happiness","harm","heights","held","help","highlights","historic","historical","history","home","hope","human","humanity","important","independence","indepth","industrial","infrastructure","inherit","inject","institutional","institutionalize","integrated","interests","interference","irresistible","issuing","joint","jointly","kinship","laid","lasting","lead","leave","legal","legitimate","lies","line","linked","long","maintained","maintaining","major","makes","market","may","members","motherland","much","nation","nations","natural","naturally","necessary","noting","number","obstacles","onechina","openingup","opportunities","opposing","option","originated","outside","part","parties","party","peaceful","pledged","pledges","policy","private","problems","process","progress","promise","promoting","property","proposed","proposes","protected","pursue","push","pushed","question","reached","realize","realized","realizing","recommend","reform","region","rejuvenation","religious","renounce","representatives","reserve","resolving","resources","respected","reunification","reunified","rights","road","room","sectors","seek","separatist","separatists","series","seven","share","shared","shoulder","since","sincerely","sincerity","situations","small","social","solved","space","stable","standards","stopped","straits","stressing","strive","supported","taken","taking","target","task","tasks","tide","time","toward","traditional","treasure","trend","understood","unwaveringly","upheld","upholding","urged","use","utmost","victories","weakness","wednesday","welcome","well","wellbeing","work","world","young"],"anchor":"y"},"yaxis":{"domain":[0,1],"title":"","anchor":"x"},"margin":{"b":40,"l":60,"t":25,"r":10},"title":"Top 5 Terms Used in Xi Jingping/Tsai Ing-wen's Speech","hovermode":"closest","showlegend":true},"attrs":{"2e901aa95e34":{"x":{},"y":{},"text":{},"textposition":"auto","name":"Xi Jingping's Speech","marker":{"color":"red","line":{"color":"red","width":1.5}},"alpha":1,"sizes":[10,100],"type":"bar"},"2e902a414ec":{"x":{},"y":{},"text":{},"textposition":"auto","name":"Tsai Ing-wen's Speech","marker":{"color":"green","line":{"color":"green","width":1.5}},"alpha":1,"sizes":[10,100],"type":"bar"}},"source":"A","config":{"modeBarButtonsToAdd":[{"name":"Collaborate","icon":{"width":1000,"ascent":500,"descent":-50,"path":"M487 375c7-10 9-23 5-36l-79-259c-3-12-11-23-22-31-11-8-22-12-35-12l-263 0c-15 0-29 5-43 15-13 10-23 23-28 37-5 13-5 25-1 37 0 0 0 3 1 7 1 5 1 8 1 11 0 2 0 4-1 6 0 3-1 5-1 6 1 2 2 4 3 6 1 2 2 4 4 6 2 3 4 5 5 7 5 7 9 16 13 26 4 10 7 19 9 26 0 2 0 5 0 9-1 4-1 6 0 8 0 2 2 5 4 8 3 3 5 5 5 7 4 6 8 15 12 26 4 11 7 19 7 26 1 1 0 4 0 9-1 4-1 7 0 8 1 2 3 5 6 8 4 4 6 6 6 7 4 5 8 13 13 24 4 11 7 20 7 28 1 1 0 4 0 7-1 3-1 6-1 7 0 2 1 4 3 6 1 1 3 4 5 6 2 3 3 5 5 6 1 2 3 5 4 9 2 3 3 7 5 10 1 3 2 6 4 10 2 4 4 7 6 9 2 3 4 5 7 7 3 2 7 3 11 3 3 0 8 0 13-1l0-1c7 2 12 2 14 2l218 0c14 0 25-5 32-16 8-10 10-23 6-37l-79-259c-7-22-13-37-20-43-7-7-19-10-37-10l-248 0c-5 0-9-2-11-5-2-3-2-7 0-12 4-13 18-20 41-20l264 0c5 0 10 2 16 5 5 3 8 6 10 11l85 282c2 5 2 10 2 17 7-3 13-7 17-13z m-304 0c-1-3-1-5 0-7 1-1 3-2 6-2l174 0c2 0 4 1 7 2 2 2 4 4 5 7l6 18c0 3 0 5-1 7-1 1-3 2-6 2l-173 0c-3 0-5-1-8-2-2-2-4-4-4-7z m-24-73c-1-3-1-5 0-7 2-2 3-2 6-2l174 0c2 0 5 0 7 2 3 2 4 4 5 7l6 18c1 2 0 5-1 6-1 2-3 3-5 3l-174 0c-3 0-5-1-7-3-3-1-4-4-5-6z"},"click":"function(gd) { \n        // is this being viewed in RStudio?\n        if (location.search == '?viewer_pane=1') {\n          alert('To learn about plotly for collaboration, visit:\\n https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html');\n        } else {\n          window.open('https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html', '_blank');\n        }\n      }"}],"cloud":false},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1}},"subplot":true,"base_url":"https://plot.ly"},"evals":["config.modeBarButtonsToAdd.0.click"],"jsHooks":{"render":[{"code":"function(el, x) { var ctConfig = crosstalk.var('plotlyCrosstalkOpts').set({\"on\":\"plotly_click\",\"persistent\":false,\"dynamic\":false,\"selectize\":false,\"opacityDim\":0.2,\"selected\":{\"opacity\":1}}); }","data":null}]}}</script>
+<p>Question: is term frequency a fair way for comparison? How can we make a better plot? Hints:</p>
+<pre class="r"><code>print(paste0(&quot;Total number of terms of Xi&#39;s speech (cleaned version):&quot;,sum(tdm[,&quot;Xi&#39;s speech&quot;])))</code></pre>
+<pre><code>## [1] &quot;Total number of terms of Xi&#39;s speech (cleaned version):678&quot;</code></pre>
+<pre class="r"><code>print(paste0(&quot;Total number of terms of Hu&#39;s speech (cleaned version):&quot;,sum(tdm[,&quot;Tsai&#39;s speech&quot;])))</code></pre>
+<pre><code>## [1] &quot;Total number of terms of Hu&#39;s speech (cleaned version):470&quot;</code></pre>
+<p>Next, we visualize the text frequency by using wordcloud function.</p>
+<pre class="r"><code>min.freq &lt;- 2 # Minimium number of word frequency
+par(mfrow=c(1,2)) # 1x2 panel plot
+par(mar=c(0.5, 0.5, 0.5, 0.5)) # Set the plot margin
+par(bg=&quot;black&quot;) # background color is black
+par(col.main=&quot;white&quot;) # Title color is white
+wordcloud(xi.p, scale=c(5,.5),min.freq=min.freq, max.words=Inf, random.order=F, colors=brewer.pal(8, &quot;Accent&quot;),family=&quot;serif&quot;)   
+title(&quot;Xi Jinping&#39;s Speech&quot;)
+wordcloud(tsai.p, scale=c(5,.5),min.freq=min.freq, max.words=Inf, random.order=F, colors=brewer.pal(8, &quot;Accent&quot;),family=&quot;mono&quot;)   
+title(&quot;Tsai Ing-wen&#39;s Speech&quot;)</code></pre>
+<p><img src="lecture1_2019_files/figure-html/wc-1.png" width="672" /></p>
+<p>Finally, we generate a comparison wordcloud, which compares the relative frequency with which a term was used in the two speeches. For example, Xi used the word “reunification” and “said” more frequenctly than did Tsai and the word cloud thus prints the term “reunification” and “said” in the side of Xi. By the same token, you find “taiwaness”, “democracy”, and “consultation” are closer to Tsai’s side. The plot shows the difference between the language usage of the leaders and sheds light on the discourse of their speeches.</p>
+<pre class="r"><code>comparison.cloud(tdm,max.words=100,random.order=FALSE, colors=c(&quot;red&quot;,&quot;blue&quot;),family=&quot;serif&quot;)</code></pre>
+<p><img src="lecture1_2019_files/figure-html/cw-1.png" width="672" /></p>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
